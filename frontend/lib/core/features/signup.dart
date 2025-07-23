@@ -1,6 +1,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/core/features/auth_module.dart';
+import 'package:frontend/core/features/checksignin.dart';
 import 'package:frontend/core/features/signin.dart';
 import 'package:frontend/core/home.dart';
 
@@ -16,6 +17,7 @@ class _SignupState extends State<Signup> {
     TextEditingController emailController = TextEditingController();
     TextEditingController passController = TextEditingController();
     TextEditingController ageController = TextEditingController();
+    
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -172,7 +174,7 @@ class _SignupState extends State<Signup> {
                     });
                     print(data);
                     int statusCode = data['statusCode'];
-                    String message = data['message'];
+                    String? message = data['message'];
                     String? error = data['error'];
                     if (statusCode == 200 || statusCode == 201) {
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -212,10 +214,10 @@ class _SignupState extends State<Signup> {
                           style: TextStyle(color: Colors.blue),
                           recognizer: TapGestureRecognizer()
                             ..onTap = () {
-                              Navigator.push(
+                              Navigator.pushReplacement(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (_) => Signin(),
+                                  builder: (_) => signIn(),
                                 ),
                               );
                             },

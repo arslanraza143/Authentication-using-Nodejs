@@ -1,5 +1,7 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/core/features/auth_module.dart';
+import 'package:frontend/core/features/signup.dart';
 import 'package:frontend/core/home.dart';
 
 class Signin extends StatefulWidget {
@@ -10,18 +12,28 @@ class Signin extends StatefulWidget {
 }
 
 class _SigninState extends State<Signin> {
+  bool isLoading = false;
+  TextEditingController emailController = TextEditingController();
+  TextEditingController passController = TextEditingController();
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    passController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final response = {};
-    TextEditingController emailController = TextEditingController();
-    TextEditingController passController = TextEditingController();
+
     return Scaffold(
       appBar: AppBar(title: Text('Sign In')),
       body: Center(
         child: Column(
           children: [
             Text(
-              'Sign Up',
+              'Sign In',
               style: TextStyle(
                 fontSize: 25,
                 color: Colors.blue,
@@ -95,8 +107,8 @@ class _SigninState extends State<Signin> {
 
             ElevatedButton(
               onPressed: () async {
-                final result = await API().whoAmI();
-  print('Whoami result: $result');
+                //               final result = await API().whoAmI();
+                // print('Whoami result: $result');
                 try {
                   Map<String, dynamic> data = await API().login({
                     'email': emailController.text.trim(),
@@ -129,6 +141,29 @@ class _SigninState extends State<Signin> {
                 }
               },
               child: Text('Login'),
+            ),
+            SizedBox(height: 7),
+            Builder(
+              builder: (BuildContext context) {
+                return RichText(
+                  text: TextSpan(
+                    children: [
+                      TextSpan(text: "Don't have Account? "),
+                      TextSpan(
+                        text: 'Sign Up',
+                        style: TextStyle(color: Colors.blue),
+                        recognizer: TapGestureRecognizer()
+                          ..onTap = () {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(builder: (_) => Signup()),
+                            );
+                          },
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
           ],
         ),
