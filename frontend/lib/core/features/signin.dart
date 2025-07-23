@@ -2,9 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:frontend/core/features/auth_module.dart';
 import 'package:frontend/core/home.dart';
 
-class Signin extends StatelessWidget {
+class Signin extends StatefulWidget {
   const Signin({super.key});
 
+  @override
+  State<Signin> createState() => _SigninState();
+}
+
+class _SigninState extends State<Signin> {
   @override
   Widget build(BuildContext context) {
     final response = {};
@@ -90,17 +95,21 @@ class Signin extends StatelessWidget {
 
             ElevatedButton(
               onPressed: () async {
+                final result = await API().whoAmI();
+  print('Whoami result: $result');
                 try {
-                  final data = await API().login({
+                  Map<String, dynamic> data = await API().login({
                     'email': emailController.text.trim(),
                     'password': passController.text,
                   });
 
-                  if (data['statusCode'] == 200) {
+                  int? statusCode = data['statusCode'];
+                  String? message = data['message'];
+                  String? error = data['error'];
+
+                  if (statusCode == 200 || statusCode == 201) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(data['message'] ?? 'Login successful'),
-                      ),
+                      SnackBar(content: Text(message ?? 'Login successful')),
                     );
                     Navigator.pushReplacement(
                       context,
@@ -109,9 +118,7 @@ class Signin extends StatelessWidget {
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text(
-                          data['error'] ?? data['message'] ?? 'Login failed',
-                        ),
+                        content: Text(error ?? message ?? 'Login failed'),
                       ),
                     );
                   }

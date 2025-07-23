@@ -1,11 +1,12 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:http/browser_client.dart' as browser_http;
 
 class API {
-  final basePath = 'http://192.168.18.124:3000';
+  final basePath = 'http://localhost:3000';
 
-  Future<Map> createUser(Map data) async {
+  Future<Map<String, dynamic>> createUser(Map data) async {
     final url = Uri.parse('$basePath/create');
     try {
       final response = await http.post(
@@ -13,34 +14,67 @@ class API {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(data),
       );
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final data = jsonDecode(response.body);
-        return data;
-      } else {
-        return {'error': 'something not good'};
+      final statusCode = response.statusCode;
+      try {
+        if (statusCode == 200 || statusCode == 201) {
+          Map<String, dynamic> decoded = Map<String, dynamic>.from(
+            jsonDecode(response.body),
+          );
+          decoded['statusCode'] = statusCode;
+          return decoded;
+        } else {
+          return {'error': 'something not good', 'statusCode': statusCode};
+        }
+      } catch (e) {
+        return {
+          'error': 'Invalid Json response from server',
+          'statusCode': statusCode,
+        };
       }
     } catch (e) {
       return {'error': e.toString()};
     }
   }
 
-  Future<Map> login(Map data) async {
-    final url = Uri.parse('$basePath/logout');
+  Future<Map<String, dynamic>> login(Map<String, dynamic> data) async {
+    final url = Uri.parse('$basePath/login');
+    final client = browser_http.BrowserClient(); // ✅ Fixed name
+    client.withCredentials = true; // ✅ Allow cookies for Web
     try {
-      final response = await http.post(
+      final response = await client.post(
         url,
         headers: {'Content-Type': 'application/json'},
-        body: data,
+        body: jsonEncode(data),
       );
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final data = jsonDecode(response.body);
-        print(data);
-        return data;
-      } else {
-        return {'error': 'something not good'};
+      final statusCode = response.statusCode;
+      try {
+        if (statusCode == 200 || statusCode == 201) {
+          Map<String, dynamic> decoded = Map<String, dynamic>.from(
+            (jsonDecode(response.body)),
+          );
+          decoded['statusCode'] = statusCode;
+          return decoded;
+        } else {
+          return {'error': 'something not good', 'statusCode': statusCode};
+        }
+      } catch (e) {
+        return {
+          'error': 'Invalid JSON response from server',
+          'statusCode': statusCode,
+        };
       }
     } catch (e) {
-      return {'error': e};
+      return {'error': e.toString()};
+    } finally {
+      client.close(); // ✅ Always close the client
     }
+  }
+
+  Future<Map<String, dynamic>> whoAmI() async {
+    final url = Uri.parse('$basePath/whoami');
+    final client = browser_http.BrowserClient()..withCredentials = true;
+    final response = await client.get(url);
+    client.close();
+    return jsonDecode(response.body);
   }
 }

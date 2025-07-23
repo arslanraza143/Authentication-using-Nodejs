@@ -10,7 +10,10 @@ const cors = require('cors');
 //middleware
 app.use(express.json());
 app.use(cookieParser());
-app.use(cors());
+app.use(cors({
+    origin: 'http://localhost:3000', 
+    credentials: true, // allow cookies to be sent
+}));
 
 app.get('/', function(req,res){
     res.send('done');
@@ -19,11 +22,10 @@ app.get('/', function(req,res){
 app.post('/create', function(req,res){
     
     let {username, email, password, age} = req.body;
-
-    try {
-        if(!username || !email || !password || !age){
+    if(!username || !email || !password || !age){
         return res.status(400).json({ message: 'All fields are required'});
-    }else{
+        }
+    try {
         bcrypt.genSalt(10, function(err, salt){
             //console.log(salt);
             bcrypt.hash(password, salt, async function(err, hash){
@@ -37,15 +39,14 @@ app.post('/create', function(req,res){
                 let token = jwt.sign({email: email},'secret');
                 // set cookie with token
                 res.cookie('token', token);
+                console.log('User created successfully:', createdUser);
                 return res.status(201).json({message: 'User created successfully',})
             });
+            
         });
-        // console.log('User created successfully');
-        // console.log(req.body);
-        
-    }
+
     } catch (error) {
-       return res.status(500).send('Internal Server Error');
+       return res.status(500).json({ error: 'Internal Server Error' });
     }
 
 });
@@ -71,16 +72,28 @@ app.post('/login',async function(req, res){
             // set cookies and response
             res.cookie('token', token,{
                 httpOnly: true,
-                sameSite: 'Strict',
+                sameSite: 'None',
+                secure: false // set to true if using https
 
             });
-            return res.status(200).json({message: 'Login Successfully'});    
+            console.log(req.cookies.token); 
+            return res.status(200).json({message: 'Login Successfully'});   
+            
         }else return res.status(401).json({ message: 'Invalid email or password' });
 
     } catch (error) {
         console.error('Login error:', error);
         return res.status(500).json({ error: 'Internal server error' });
     }
+});
+
+app.get('/whoami', (req, res) => {
+  console.log('Cookies:', req.cookies);
+  if (req.cookies.token) {
+    return res.json({ loggedIn: true });
+  } else {
+    return res.status(401).json({ loggedIn: false });
+  }
 });
 
 app.listen(3000);
